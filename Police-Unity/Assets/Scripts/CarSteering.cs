@@ -8,7 +8,8 @@ public class CarSteering : MonoBehaviour {
 	//reference to 2D rigidbody of car
 	Rigidbody2D rb;
 
-	//following variable is serialized
+	//following variable is serialised
+	//serialising a variable allows you to change the variable in the unity editor
 	[SerializeField]
 	float accelerationPower = 5f;
 	//following variable is serialized
