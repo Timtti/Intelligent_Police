@@ -29,7 +29,7 @@ public class CarSteering : MonoBehaviour {
 
 		//assign steering amount to read left and right inputs as negative values
 		steeringAmount = - Input.GetAxis ("Horizontal");
-		//assign speed to up and down inputs multiplied against accerkeration power variable
+		//assign speed to up and down inputs multiplied against acceleration power variable
 		speed = Input.GetAxis ("Vertical") * accelerationPower;
 		//assign direction to Mathf.sign of a product of the rigidbody's vectors velocity and up
 		//Mathf.sign gives 1 when positive value given and -1 when negative value given
