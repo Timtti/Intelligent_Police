@@ -12,7 +12,7 @@ public class waypointFollow : MonoBehaviour
 
     int waypointIndex = 0;
 
-    public CarSteering carSteering;
+    //public CarSteering carSteering;
 
     // Start is called before the first frame update
     void Start()
@@ -23,13 +23,11 @@ public class waypointFollow : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        //PlaceWaypoint();
         Move();
     }
 
     void Move()
     {
-
         transform.position = Vector2.MoveTowards(transform.position,
                                                 waypoints[waypointIndex].transform.position,
                                                 moveSpeed * Time.deltaTime);
@@ -40,6 +38,8 @@ public class waypointFollow : MonoBehaviour
         }
 
         if (waypointIndex == waypoints.Length)
+        {
             waypointIndex = 0;
+        }
     }
 }
