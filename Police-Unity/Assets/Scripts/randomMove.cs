@@ -26,7 +26,7 @@ public class randomMove : MonoBehaviour
     void Start()
     {
         rb2D = GetComponent<Rigidbody2D>();
-        previous[0] = waypointIndex;
+        current = waypointIndex;
     }
 
     // Update is called once per frame
@@ -45,7 +45,8 @@ public class randomMove : MonoBehaviour
                 //find next waypoint
                 waypointIndex = randomDirection();
                 //set previous as last waypoint
-                previous[i] = waypointIndex;
+                previous[i] = current;
+                current = waypointIndex;
                 i++;
             }
         }
@@ -136,15 +137,15 @@ public class randomMove : MonoBehaviour
             {
                 list.Add(left);
             }
-            if (right <= 15 && !previous.Contains(left) && !hitright)
+            if (right <= 15 && !previous.Contains(right) && !hitright)
             {
                 list.Add(right);
             }
-            if (remainUp != 3 && !previous.Contains(left) && !hitup)
+            if (remainUp != 3 && !previous.Contains(up) && !hitup)
             {
                 list.Add(up);
             }
-            if (remainDown != 0 && !previous.Contains(left) && !hitdown)
+            if (remainDown != 0 && !previous.Contains(down) && !hitdown)
             {
                 list.Add(down);
             }
