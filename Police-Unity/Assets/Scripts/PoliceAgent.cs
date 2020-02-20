@@ -52,7 +52,7 @@ public class PoliceAgent : Agent
         this.rbody.velocity = this.gameObject.transform.rotation * new Vector2(0, 20);
         
         float distance = Vector2.Distance(target.transform.positoin,this.transform.position);
-        if distance < 5f {
+        if (distance < 5f) {
             AddReward(3.0f)
         }
         if (this.crush)
