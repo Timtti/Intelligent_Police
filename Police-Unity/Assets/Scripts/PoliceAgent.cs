@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Sprites;
 using MLAgents;
-using MLAgents.Sensor;
+using MLAgents.Sensors;
 
 public class PoliceAgent : Agent
 {
@@ -64,14 +64,15 @@ public class PoliceAgent : Agent
         }
     }
 
-    public override void InitializeAgent()
+    public override void Initialize()
     {
         this.rbody = GetComponent<Rigidbody2D>();
         this.initPos = this.transform.position;
         this.initRota = this.transform.rotation;
         this.car_collider = GetComponent<Collider2D>();
     }
-    public override void AgentReset()
+
+    public override void OnEpisodeBegin()
     {
         this.transform.position = this.initPos;
         this.transform.rotation = this.initRota;
@@ -90,9 +91,10 @@ public class PoliceAgent : Agent
         {
             AddReward(-10f);
         }
-        Done();
+        EndEpisode();
     }
-    public override void AgentAction(float[] vectorAction)
+
+    public override void OnActionReceived(float[] vectorAction)
     {
         if (chasing)
         {
@@ -278,14 +280,14 @@ public class PoliceAgent : Agent
     //    }
     //}
 
-    public override void CollectObservations()
+    public override void CollectObservations(VectorSensor s)
     {
         // Target and Agent positions
-        sensor.AddObservation(this.transform.position);
+        s.AddObservation(this.transform.position);
 
         // Agent velocity
-        sensor.AddObservation(rbody.velocity.x);
-        sensor.AddObservation(rbody.velocity.y);
+        s.AddObservation(rbody.velocity.x);
+        s.AddObservation(rbody.velocity.y);
     }
     public override float[] Heuristic()
     {
