@@ -1,6 +1,7 @@
 test_editors:
   - version: 2018.4
   - version: 2019.3
+  - version: 2020.1
 test_platforms:
   - name: win
     type: Unity::VM
@@ -34,11 +35,10 @@ test_{{ platform.name }}_{{ editor.version }}:
   dependencies:
     - .yamato/com.unity.ml-agents-pack.yml#pack
   triggers:
-    pull_requests:
-      - targets:
-          only:
-            - "master"
-            - "/release-.*/"
-            - "/hotfix-.*/"
+    changes:
+      only:
+        - "com.unity.ml-agents/**"
+        - ".yamato/com.unity.ml-agents-test.yml"
+
   {% endfor %}
   {% endfor %}
