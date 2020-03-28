@@ -16,75 +16,13 @@ public class CarAgent : Agent
     float power = 50f;
     [SerializeField]
     Transform[] waypoints;
-
-    bool trapped = false;
+    
     GameObject targetObject;
     Transform target;
-    
-    float searchAngle = 0.785398163f;
-    SphereCollider searchArea;
-    bool chasing = false;
-    float angleFound;
+    bool seen;
 
     int nextIndex = 6;
     int preIndex = 10;
-    bool handled = false;
-
-    public void Sensor()
-    {
-        Vector3 toVector = target.transform.position - transform.position;
-        Vector2 toVector2 = target.transform.position - transform.position;
-        float angleAbs = Mathf.Atan2(toVector2.y, toVector2.x);
-        Debug.Log(angleAbs);
-        //angleFound = Vector3.Angle(transform.forward, toVector)-90f;
-        //if (this.angleFound <= searchAngle && this.angleFound >= (0-searchAngle))
-        if(angleAbs <= searchAngle && angleAbs >= (0-searchAngle))
-        {
-            Debug.Log("YES");
-            chasing = true;
-        }
-        else
-        {
-            chasing = false;
-            this.angleFound = new float();
-        }
-    }
-        
-    //public void OnTriggerStay2D(Collider2D collision)
-    //{
-    //    if(collision.tag == "Target")
-    //    {
-    //        var targetDirection = collision.transform.position - transform.position;
-    //        angleFound = Vector3.Angle(transform.forward, targetDirection);
-    //        if(angleFound <= searchAngle)
-    //        {
-    //            Debug.Log("Found:" + angleFound);
-    //            chasing = true;
-    //        }
-    //        else
-    //        {
-    //            chasing = false;
-    //            angleFound = new float();
-    //        }
-    //    }
-    //    else
-    //    {
-    //        chasing = false;
-    //        angleFound = new float();
-    //    }
-    //}
-    
-    public void ChasingMove()
-    {
-        if (angleFound < 90)
-        {
-            RelaHandling("Left");
-        }
-        else if (angleFound > 90)
-        {
-            RelaHandling("Right");
-        }
-    }
 
     public override void InitializeAgent()
     {
@@ -99,10 +37,11 @@ public class CarAgent : Agent
     {
         this.transform.position = this.initPos;
         this.transform.rotation = this.initRota;
-        this.crush = false;
-        this.handled = false;
         this.nextIndex = 6;
         this.preIndex = 10;
+        this.targetObject = GameObject.FindGameObjectWithTag("Target");
+        this.target = targetObject.transform;
+        this.seen = targetObject.GetComponent<isSeen>().Rendered;
     }
     private void OnCollisionEnter2D(Collision2D collision)
     {
@@ -119,16 +58,6 @@ public class CarAgent : Agent
     }
     public override void AgentAction(float[] vectorAction)
     {
-        Sensor();
-        if (chasing)
-        {
-            ChasingMove();
-        }
-        else
-        {
-            Handling(waypoints[nextIndex].position);
-        }
-        
         Move();
         if (Mathf.Approximately(transform.position.x, waypoints[nextIndex].transform.position.x)
                 && Mathf.Approximately(transform.position.y, waypoints[nextIndex].transform.position.y))
@@ -139,93 +68,43 @@ public class CarAgent : Agent
             //set previous as last waypoint
         }
     }
+    
     public void Move()
     {
+
+        this.seen = targetObject.GetComponent<isSeen>().Rendered;
+        if (seen)
+        {
+            Debug.Log("SEEN");
+        }
         //move
+        transform.right = transform.position - waypoints[nextIndex].position;
         transform.position = Vector2.MoveTowards(transform.position,
                                         waypoints[nextIndex].transform.position,
                                         power * Time.deltaTime);
     }
-
-    public void Handling(Vector3 dest)
+    public void Handling()
     {
-        if (!handled)
+        if(preIndex - nextIndex == 4)
         {
-            handled = true;
-            if(dest.x < transform.position.x)
-            {
-                transform.rotation = Quaternion.Euler(0, 0, 0);
-            }
-            if(dest.x > transform.position.x)
-            {
-                transform.rotation = Quaternion.Euler(0, 0, 180);
-            }
-            if(dest.y < transform.position.y)
-            {
-                transform.rotation = Quaternion.Euler(0, 0, 90);
-            }
-            if(dest.y > transform.position.y)
-            {
-                transform.rotation = Quaternion.Euler(0, 0, -90);
-            }
-        }
-        
-    }
-    public void Handling(string turn)
-    {
-        if (turn == "Left"){
-            transform.Rotate(Vector3.left);
-        }
-        else if(turn == "Right")
+            //left
+            transform.Rotate(0, 0, 0);
+        }else if(nextIndex - preIndex == 4)
         {
-            transform.Rotate(Vector3.right);
-        }
-    }
-    public string Heading()
-    {
-        string ans;
-        if (preIndex - nextIndex == 4)
-        {
-            ans = "Left";
-        }
-        else if(preIndex - nextIndex == -4)
-        {
-            ans = "Right";
+            //right
+            transform.Rotate(180, 0, 0);
         }
         else if(preIndex - nextIndex == 1)
         {
-            ans = "Up";
+            //up
+            transform.Rotate(0, 0, 0);
         }
         else if(preIndex - nextIndex == -1)
         {
-            ans = "Down";
-        }
-        else
-        {
-            ans = (preIndex - nextIndex).ToString();
-        }
-        return ans;
-    }
-    public void RelaHandling(string direction)
-    {
-        string heading = Heading();
-        if ((direction == "Left" && heading == "Up")||(direction == "Right" && heading == "Down")||(direction == "Forward" && heading == "Left")||(direction == "Backward" && heading == "Right"))
-        {
-            transform.rotation = Quaternion.Euler(0, 0, 90);
-        }
-        else if ((direction == "Right" && heading == "Up") || (direction == "Left" && heading == "Down") || (direction == "Forward" && heading == "Right") || (direction == "Backward" && heading == "Left"))
-        {
-            transform.rotation = Quaternion.Euler(0, 0, -90);
-        }
-        else if ((direction == "Forward" && heading == "Up") || (direction == "Backward" && heading == "Down") || (direction == "Left" && heading == "Right") || (direction == "Right" && heading == "Left"))
-        {
-            transform.rotation = Quaternion.Euler(0, 0, 0);
-        }
-        else if ((direction == "Backward" && heading == "Up") || (direction == "Forward" && heading == "Down") || (direction == "Right" && heading == "Right") || (direction == "Left" && heading == "Left"))
-        {
-            transform.rotation = Quaternion.Euler(0, 0, 180);
+            //down
         }
     }
+    
     int randomDirection()
     {
         //if no waypoints set as no waypoint to follow
@@ -287,10 +166,6 @@ public class CarAgent : Agent
             {
                 wpI = down;
             }
-            else
-            {
-                trapped = true; //no direction car can go
-            }
         }
         else
         {
@@ -315,40 +190,9 @@ public class CarAgent : Agent
             System.Random random = new System.Random();
             wpI = list[random.Next(list.Count)];
         }
-        handled = false;
         return wpI;
     }
-
-    //public Vector3 Handling(int choice = 0)
-    //{
-    //    if (choice == 1)
-    //    {
-    //        return Vector3.forward;
-    //    }
-    //    if (choice == 2)
-    //    {
-    //        return Vector3.back;
-    //    }
-    //    else
-    //    {
-    //        return new Vector3(0, 0, 0);
-    //    }
-    //}
-
-    //public Vector3 Pedalwork(int min = 0, int max = 0)
-    //{
-    //    if (min == 0 & max == 0)
-    //    {
-    //        return new Vector3(power, 0, 0);
-    //    }
-    //    else
-    //    {
-    //        System.Random randf = new System.Random();
-    //        float f = (float)randf.Next(min, max);
-    //        return new Vector3(f, 0, 0);
-    //    }
-    //}
-
+    
     public override void CollectObservations()
     {
         // Target and Agent positions
