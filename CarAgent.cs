@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.Sprites;
 using MLAgents;
 using MLAgents.Sensor;
+using UnityEngine.UI;
 
 public class CarAgent : Agent
 {
@@ -16,19 +17,24 @@ public class CarAgent : Agent
     float power = 50f;
     [SerializeField]
     Transform[] waypoints;
-    
+
+    GameObject[] policeteam;
+
     GameObject targetObject;
     Transform target;
-    bool seen;
-
-    int nextIndex = 6;
-    int preIndex = 10;
+    public bool seen;
+    [SerializeField]
+    int[] initInd;
+    int nextIndex;
+    int preIndex;
 
     public override void InitializeAgent()
     {
         this.rbody = GetComponent<Rigidbody2D>();
         this.initPos = this.transform.position;
         this.initRota = this.transform.rotation;
+        this.preIndex = initInd[0];
+        this.nextIndex = initInd[1];
         this.car_collider = GetComponent<Collider2D>();
         this.targetObject = GameObject.FindGameObjectWithTag("Target");
         this.target = this.targetObject.transform;
@@ -37,12 +43,12 @@ public class CarAgent : Agent
     {
         this.transform.position = this.initPos;
         this.transform.rotation = this.initRota;
-        this.nextIndex = 6;
-        this.preIndex = 10;
         this.targetObject = GameObject.FindGameObjectWithTag("Target");
         this.target = targetObject.transform;
         this.seen = targetObject.GetComponent<isSeen>().Rendered;
+        this.policeteam = GameObject.FindGameObjectsWithTag("Police");
     }
+    
     private void OnCollisionEnter2D(Collision2D collision)
     {
         this.crush = true;
@@ -71,18 +77,28 @@ public class CarAgent : Agent
     
     public void Move()
     {
+        transform.right = transform.position - waypoints[nextIndex].position;
 
         this.seen = targetObject.GetComponent<isSeen>().Rendered;
         if (seen)
         {
             Debug.Log("SEEN");
+            Chase();
         }
-        //move
-        transform.right = transform.position - waypoints[nextIndex].position;
-        transform.position = Vector2.MoveTowards(transform.position,
-                                        waypoints[nextIndex].transform.position,
-                                        power * Time.deltaTime);
+        else
+        {
+            //move
+            transform.position = Vector2.MoveTowards(transform.position,
+                                            waypoints[nextIndex].transform.position,
+                                            power * Time.deltaTime);
+        }
     }
+
+    public void Chase()
+    {
+        transform.position = Vector2.MoveTowards(transform.position, target.position, power * Time.deltaTime);
+    }
+
     public void Handling()
     {
         if(preIndex - nextIndex == 4)
