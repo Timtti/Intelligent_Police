@@ -2,7 +2,6 @@
 # Contains an implementation of SAC as described in https://arxiv.org/abs/1801.01290
 # and implemented in https://github.com/hill-a/stable-baselines
 
-import logging
 from collections import defaultdict
 from typing import Dict
 import os
@@ -10,6 +9,7 @@ import os
 import numpy as np
 
 
+from mlagents_envs.logging_util import get_logger
 from mlagents_envs.timers import timed
 from mlagents.trainers.policy.tf_policy import TFPolicy
 from mlagents.trainers.policy.nn_policy import NNPolicy
@@ -20,7 +20,8 @@ from mlagents.trainers.brain import BrainParameters
 from mlagents.trainers.exception import UnityTrainerException
 
 
-logger = logging.getLogger("mlagents.trainers")
+logger = get_logger(__name__)
+
 BUFFER_TRUNCATE_PERCENT = 0.8
 
 
@@ -73,7 +74,6 @@ class SACTrainer(RLTrainer):
             "memory_size",
             "model_path",
             "reward_signals",
-            "vis_encode_type",
         ]
 
         self._check_param_keys()
@@ -157,9 +157,6 @@ class SACTrainer(RLTrainer):
         last_step = trajectory.steps[-1]
         agent_id = trajectory.agent_id  # All the agents should have the same ID
 
-        # Add to episode_steps
-        self.episode_steps[agent_id] += len(trajectory.steps)
-
         agent_buffer_trajectory = trajectory.to_agentbuffer()
 
         # Update the normalization
@@ -182,7 +179,7 @@ class SACTrainer(RLTrainer):
             agent_buffer_trajectory, trajectory.next_obs, trajectory.done_reached
         )
         for name, v in value_estimates.items():
-            self.stats_reporter.add_stat(
+            self._stats_reporter.add_stat(
                 self.optimizer.reward_signals[name].value_name, np.mean(v)
             )
 
@@ -298,12 +295,12 @@ class SACTrainer(RLTrainer):
             )
 
         for stat, stat_list in batch_update_stats.items():
-            self.stats_reporter.add_stat(stat, np.mean(stat_list))
+            self._stats_reporter.add_stat(stat, np.mean(stat_list))
 
         if self.optimizer.bc_module:
             update_stats = self.optimizer.bc_module.update()
             for stat, val in update_stats.items():
-                self.stats_reporter.add_stat(stat, val)
+                self._stats_reporter.add_stat(stat, val)
 
     def update_reward_signals(self) -> None:
         """
@@ -338,7 +335,7 @@ class SACTrainer(RLTrainer):
             for stat_name, value in update_stats.items():
                 batch_update_stats[stat_name].append(value)
         for stat, stat_list in batch_update_stats.items():
-            self.stats_reporter.add_stat(stat, np.mean(stat_list))
+            self._stats_reporter.add_stat(stat, np.mean(stat_list))
 
     def add_policy(self, name_behavior_id: str, policy: TFPolicy) -> None:
         """
