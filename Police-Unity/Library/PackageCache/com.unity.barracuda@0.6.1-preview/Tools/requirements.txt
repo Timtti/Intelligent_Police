@@ -1,5 +1,9 @@
 numpy===1.16.4
+<<<<<<< HEAD
 tensorflow==1.15.2
+=======
+tensorflow>=1.15.2
+>>>>>>> e6266d153c3b0c58a16e61f617e97d7d4d179d6d
 onnx==1.2.2
 h5py==2.8.0
 Keras==2.1.6
