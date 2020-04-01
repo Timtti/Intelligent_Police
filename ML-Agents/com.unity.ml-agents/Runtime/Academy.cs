@@ -4,7 +4,9 @@ using System.Collections.Generic;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
-using MLAgents.InferenceBrain;
+using MLAgents.Inference;
+using MLAgents.Policies;
+using MLAgents.SideChannels;
 using Barracuda;
 
 /**
@@ -49,21 +51,40 @@ namespace MLAgents
         "docs/Learning-Environment-Design.md")]
     public class Academy : IDisposable
     {
-        const string k_ApiVersion = "API-14";
+        /// <summary>
+        /// Communication protocol version.
+        /// When connecting to python, this must match UnityEnvironment.API_VERSION.
+        /// Currently we require strict equality between the communication protocol
+        /// on each side, although we may allow some flexibility in the future.
+        /// This should be incremented whenever a change is made to the communication protocol.
+        /// </summary>
+        const string k_ApiVersion = "0.15.0";
+
+        /// <summary>
+        /// Unity package version of com.unity.ml-agents.
+        /// This must match the version string in package.json and is checked in a unit test.
+        /// </summary>
+        internal const string k_PackageVersion = "0.15.0-preview";
+
         const int k_EditorTrainingPort = 5004;
+
+        const string k_portCommandLineFlag = "--mlagents-port";
 
         // Lazy initializer pattern, see https://csharpindepth.com/articles/singleton#lazy
         static Lazy<Academy> s_Lazy = new Lazy<Academy>(() => new Academy());
 
+        /// <summary>
+        /// True if the Academy is initialized, false otherwise.
+        /// </summary>
         public static bool IsInitialized
         {
             get { return s_Lazy.IsValueCreated; }
         }
 
+        /// <summary>
+        /// The singleton Academy object.
+        /// </summary>
         public static Academy Instance { get { return s_Lazy.Value; } }
-
-        public IFloatProperties FloatProperties;
-
 
         // Fields not provided in the Inspector.
 
@@ -98,7 +119,7 @@ namespace MLAgents
         List<ModelRunner> m_ModelRunners = new List<ModelRunner>();
 
         // Flag used to keep track of the first time the Academy is reset.
-        bool m_FirstAcademyReset;
+        bool m_HadFirstReset;
 
         // The Academy uses a series of events to communicate with agents
         // to facilitate synchronization. More specifically, it ensure
@@ -112,6 +133,10 @@ namespace MLAgents
 
         // Signals to all the listeners that the academy is being destroyed
         internal event Action DestroyAction;
+
+        // Signals the Agent that a new step is about to start.
+        // This will mark the Agent as Done if it has reached its maxSteps.
+        internal event Action AgentIncrementStep;
 
         // Signals to all the agents at each environment step along with the
         // Academy's maxStepReached, done and stepCount values. The agents rely
@@ -130,7 +155,9 @@ namespace MLAgents
         // Signals to all the agents each time the Academy force resets.
         internal event Action AgentForceReset;
 
-        // Signals that the Academy has been reset by the training process
+        /// <summary>
+        /// Signals that the Academy has been reset by the training process.
+        /// </summary>
         public event Action OnEnvironmentReset;
 
         AcademyFixedUpdateStepper m_FixedUpdateStepper;
@@ -147,14 +174,15 @@ namespace MLAgents
         {
             Application.quitting += Dispose;
 
-            LazyInitialization();
+            LazyInitialize();
         }
 
         /// <summary>
         /// Initialize the Academy if it hasn't already been initialized.
-        /// This method is always safe to call; it will have no effect if the Academy is already initialized.
+        /// This method is always safe to call; it will have no effect if the Academy is already
+        /// initialized.
         /// </summary>
-        internal void LazyInitialization()
+        internal void LazyInitialize()
         {
             if (!m_Initialized)
             {
@@ -164,10 +192,10 @@ namespace MLAgents
         }
 
         /// <summary>
-        /// Enable stepping of the Academy during the FixedUpdate phase.  This is done by creating a temporary
-        /// GameObject with a MonoBehavior that calls Academy.EnvironmentStep().
+        /// Enable stepping of the Academy during the FixedUpdate phase. This is done by creating
+        /// a temporary GameObject with a MonoBehaviour that calls Academy.EnvironmentStep().
         /// </summary>
-        public void EnableAutomaticStepping()
+        void EnableAutomaticStepping()
         {
             if (m_FixedUpdateStepper != null)
             {
@@ -184,7 +212,7 @@ namespace MLAgents
         /// Disable stepping of the Academy during the FixedUpdate phase. If this is called, the Academy must be
         /// stepped manually by the user by calling Academy.EnvironmentStep().
         /// </summary>
-        public void DisableAutomaticStepping(bool destroyImmediate = false)
+        void DisableAutomaticStepping()
         {
             if (m_FixedUpdateStepper == null)
             {
@@ -192,7 +220,7 @@ namespace MLAgents
             }
 
             m_FixedUpdateStepper = null;
-            if (destroyImmediate)
+            if (Application.isEditor)
             {
                 UnityEngine.Object.DestroyImmediate(m_StepperObject);
             }
@@ -205,11 +233,22 @@ namespace MLAgents
         }
 
         /// <summary>
-        /// Returns whether or not the Academy is automatically stepped during the FixedUpdate phase.
+        /// Determines whether or not the Academy is automatically stepped during the FixedUpdate phase.
         /// </summary>
-        public bool IsAutomaticSteppingEnabled
+        public bool AutomaticSteppingEnabled
         {
             get { return m_FixedUpdateStepper != null; }
+            set
+            {
+                if (value)
+                {
+                    EnableAutomaticStepping();
+                }
+                else
+                {
+                    DisableAutomaticStepping();
+                }
+            }
         }
 
         // Used to read Python-provided environment parameters
@@ -219,7 +258,7 @@ namespace MLAgents
             var inputPort = "";
             for (var i = 0; i < args.Length; i++)
             {
-                if (args[i] == "--port")
+                if (args[i] == k_portCommandLineFlag)
                 {
                     inputPort = args[i + 1];
                 }
@@ -249,8 +288,9 @@ namespace MLAgents
         {
             EnableAutomaticStepping();
 
-            var floatProperties = new FloatPropertiesChannel();
-            FloatProperties = floatProperties;
+            SideChannelUtils.RegisterSideChannel(new EngineConfigurationChannel());
+            SideChannelUtils.RegisterSideChannel(new FloatPropertiesChannel());
+            SideChannelUtils.RegisterSideChannel(new StatsSideChannel());
 
             // Try to launch the communicator by using the arguments passed at launch
             var port = ReadPortFromArgs();
@@ -266,8 +306,6 @@ namespace MLAgents
 
             if (Communicator != null)
             {
-                Communicator.RegisterSideChannel(new EngineConfigurationChannel());
-                Communicator.RegisterSideChannel(floatProperties);
                 // We try to exchange the first message with Python. If this fails, it means
                 // no Python Process is ready to train the environment. In this case, the
                 //environment must use Inference.
@@ -276,7 +314,8 @@ namespace MLAgents
                     var unityRlInitParameters = Communicator.Initialize(
                         new CommunicatorInitParameters
                         {
-                            version = k_ApiVersion,
+                            unityCommunicationVersion = k_ApiVersion,
+                            unityPackageVersion = k_PackageVersion,
                             name = "AcademySingleton",
                         });
                     UnityEngine.Random.InitState(unityRlInitParameters.seed);
@@ -334,9 +373,9 @@ namespace MLAgents
         /// <returns>
         /// Current episode number.
         /// </returns>
-        public int GetEpisodeCount()
+        public int EpisodeCount
         {
-            return m_EpisodeCount;
+            get { return m_EpisodeCount; }
         }
 
         /// <summary>
@@ -345,9 +384,9 @@ namespace MLAgents
         /// <returns>
         /// Current step count.
         /// </returns>
-        public int GetStepCount()
+        public int StepCount
         {
-            return m_StepCount;
+            get { return m_StepCount; }
         }
 
         /// <summary>
@@ -356,9 +395,9 @@ namespace MLAgents
         /// <returns>
         /// Total step count.
         /// </returns>
-        public int GetTotalStepCount()
+        public int TotalStepCount
         {
-            return m_TotalStepCount;
+            get { return m_TotalStepCount; }
         }
 
         /// <summary>
@@ -370,7 +409,7 @@ namespace MLAgents
         {
             EnvironmentReset();
             AgentForceReset?.Invoke();
-            m_FirstAcademyReset = true;
+            m_HadFirstReset = true;
         }
 
         /// <summary>
@@ -379,13 +418,16 @@ namespace MLAgents
         /// </summary>
         public void EnvironmentStep()
         {
-            if (!m_FirstAcademyReset)
+            if (!m_HadFirstReset)
             {
                 ForcedFullReset();
             }
 
             AgentSetStatus?.Invoke(m_StepCount);
 
+            m_StepCount += 1;
+            m_TotalStepCount += 1;
+            AgentIncrementStep?.Invoke();
 
             using (TimerStack.Instance.Scoped("AgentSendState"))
             {
@@ -397,13 +439,16 @@ namespace MLAgents
                 DecideAction?.Invoke();
             }
 
+            // If the communicator is not on, we need to clear the SideChannel sending queue
+            if (!IsCommunicatorOn)
+            {
+                SideChannelUtils.GetSideChannelMessage();
+            }
+
             using (TimerStack.Instance.Scoped("AgentAct"))
             {
                 AgentAct?.Invoke();
             }
-
-            m_StepCount += 1;
-            m_TotalStepCount += 1;
         }
 
         /// <summary>
@@ -420,12 +465,12 @@ namespace MLAgents
         /// Creates or retrieves an existing ModelRunner that uses the same
         /// NNModel and the InferenceDevice as provided.
         /// </summary>
-        /// <param name="model"> The NNModel the ModelRunner must use </param>
-        /// <param name="brainParameters"> The brainParameters used to create
-        /// the ModelRunner </param>
-        /// <param name="inferenceDevice"> The inference device (CPU or GPU)
-        /// the ModelRunner will use </param>
-        /// <returns> The ModelRunner compatible with the input settings</returns>
+        /// <param name="model">The NNModel the ModelRunner must use.</param>
+        /// <param name="brainParameters">The brainParameters used to create the ModelRunner.</param>
+        /// <param name="inferenceDevice">
+        /// The inference device (CPU or GPU) the ModelRunner will use.
+        /// </param>
+        /// <returns> The ModelRunner compatible with the input settings.</returns>
         internal ModelRunner GetOrCreateModelRunner(
             NNModel model, BrainParameters brainParameters, InferenceDevice inferenceDevice)
         {
@@ -444,12 +489,14 @@ namespace MLAgents
         /// </summary>
         public void Dispose()
         {
-            DisableAutomaticStepping(true);
+            DisableAutomaticStepping();
+
             // Signal to listeners that the academy is being destroyed now
             DestroyAction?.Invoke();
 
             Communicator?.Dispose();
             Communicator = null;
+            SideChannelUtils.UnregisterAllSideChannels();
 
             if (m_ModelRunners != null)
             {
@@ -457,6 +504,7 @@ namespace MLAgents
                 {
                     mr.Dispose();
                 }
+
                 m_ModelRunners = null;
             }
 
@@ -466,8 +514,6 @@ namespace MLAgents
             // TODO - Pass worker ID or some other identifier,
             // so that multiple envs won't overwrite each others stats.
             TimerStack.Instance.SaveJsonTimers();
-
-            FloatProperties = null;
             m_Initialized = false;
 
             // Reset the Lazy instance

@@ -1,13 +1,10 @@
 # Making a New Learning Environment
 
-This tutorial walks through the process of creating a Unity Environment. A Unity
-Environment is an application built using the Unity Engine which can be used to
-train Reinforcement Learning Agents.
+This tutorial walks through the process of creating a Unity Environment from scratch. We recommend first reading the [Getting Started](Getting-Started.md) guide to understand the concepts presented here first in an already-built environment.
 
 ![A simple ML-Agents environment](images/mlagents-NewTutSplash.png)
 
-In this example, we will train a ball to roll to a randomly placed cube. The
-ball also learns to avoid falling off the platform.
+In this example, we will create an agent capable of controlling a ball on a platform. We will then train the agent to roll the ball toward the cube while avoiding falling off the platform.
 
 ## Overview
 
@@ -117,7 +114,7 @@ Then, edit the new `RollerAgent` script:
 
 1. In the Unity Project window, double-click the `RollerAgent` script to open it
    in your code editor.
-2. In the editor, add the `using MLAgents;` statement and then change the base
+2. In the editor, add the `using MLAgents;` and `using MLAgents.Sensors` statements and then change the base
     class from `MonoBehaviour` to `Agent`.
 3. Delete the `Update()` method, but we will use the `Start()` function, so
     leave it alone for now.
@@ -128,9 +125,9 @@ to the cube using reinforcement learning.
 
 ### Initialization and Resetting the Agent
 
-When the Agent reaches its target, it marks itself done and its Agent reset
-function moves the target to a random location. In addition, if the Agent rolls
-off the platform, the reset function puts it back onto the floor.
+When the Agent reaches its target, its episode ends and the `OnEpisodeBegin()`
+method moves the target to a random location. In addition, if the Agent rolls
+off the platform, the `OnEpisodeBegin()` method puts it back onto the floor.
 
 To move the target GameObject, we need a reference to its Transform (which
 stores a GameObject's position, orientation and scale in the 3D world). To get
@@ -155,6 +152,7 @@ So far, our RollerAgent script looks like:
 using System.Collections.Generic;
 using UnityEngine;
 using MLAgents;
+using MLAgents.Sensors;
 
 public class RollerAgent : Agent
 {
@@ -164,7 +162,7 @@ public class RollerAgent : Agent
     }
 
     public Transform Target;
-    public override void AgentReset()
+    public override void OnEpisodeBegin()
     {
         if (this.transform.position.y < 0)
         {
@@ -182,7 +180,7 @@ public class RollerAgent : Agent
 }
 ```
 
-Next, let's implement the `Agent.CollectObservations()` method.
+Next, let's implement the `Agent.CollectObservations(VectorSensor sensor)` method.
 
 ### Observing the Environment
 
@@ -198,13 +196,13 @@ In our case, the information our Agent collects includes:
 * Position of the target.
 
 ```csharp
-AddVectorObs(Target.position);
+sensor.AddObservation(Target.position);
 ```
 
 * Position of the Agent itself.
 
 ```csharp
-AddVectorObs(this.transform.position);
+sensor.AddObservation(this.transform.position);
 ```
 
 * The velocity of the Agent. This helps the Agent learn to control its speed so
@@ -212,33 +210,33 @@ AddVectorObs(this.transform.position);
 
 ```csharp
 // Agent velocity
-AddVectorObs(rBody.velocity.x);
-AddVectorObs(rBody.velocity.z);
+sensor.AddObservation(rBody.velocity.x);
+sensor.AddObservation(rBody.velocity.z);
 ```
 
 In total, the state observation contains 8 values and we need to use the
 continuous state space when we get around to setting the Brain properties:
 
 ```csharp
-public override void CollectObservations()
+public override void CollectObservations(VectorSensor sensor)
 {
     // Target and Agent positions
-    AddVectorObs(Target.position);
-    AddVectorObs(this.transform.position);
+    sensor.AddObservation(Target.position);
+    sensor.AddObservation(this.transform.position);
 
     // Agent velocity
-    AddVectorObs(rBody.velocity.x);
-    AddVectorObs(rBody.velocity.z);
+    sensor.AddObservation(rBody.velocity.x);
+    sensor.AddObservation(rBody.velocity.z);
 }
 ```
 
-The final part of the Agent code is the `Agent.AgentAction()` method, which
-receives the decision from the Brain and assigns the reward.
+The final part of the Agent code is the `Agent.OnActionReceived()` method, which
+receives the actions from the Brain and assigns the reward.
 
 ### Actions
 
 The decision of the Brain comes in the form of an action array passed to the
-`AgentAction()` function. The number of elements in this array is determined by
+`OnActionReceived()` function. The number of elements in this array is determined by
 the `Vector Action` `Space Type` and `Space Size` settings of the
 agent's Brain. The RollerAgent uses the continuous vector action space and needs
 two continuous control signals from the Brain. Thus, we will set the Brain
@@ -262,7 +260,7 @@ rBody.AddForce(controlSignal * speed);
 
 ### Rewards
 
-Reinforcement learning requires rewards. Assign rewards in the `AgentAction()`
+Reinforcement learning requires rewards. Assign rewards in the `OnActionReceived()`
 function. The learning algorithm uses the rewards assigned to the Agent during
 the simulation and learning process to determine whether it is giving
 the Agent the optimal actions. You want to reward an Agent for completing the
@@ -271,7 +269,7 @@ Target cube.
 
 The RollerAgent calculates the distance to detect when it reaches the target.
 When it does, the code calls the `Agent.SetReward()` method to assign a
-reward of 1.0 and marks the agent as finished by calling the `Done()` method
+reward of 1.0 and marks the agent as finished by calling the `EndEpisode()` method
 on the Agent.
 
 ```csharp
@@ -281,28 +279,28 @@ float distanceToTarget = Vector3.Distance(this.transform.position,
 if (distanceToTarget < 1.42f)
 {
     SetReward(1.0f);
-    Done();
+    EndEpisode();
 }
 ```
 
-Finally, if the Agent falls off the platform, set the Agent to done so that it can reset itself:
+Finally, if the Agent falls off the platform, end the episode so that it can reset itself:
 
 ```csharp
 // Fell off platform
 if (this.transform.position.y < 0)
 {
-    Done();
+    EndEpisode();
 }
 ```
 
-### AgentAction()
+### OnActionReceived()
 
 With the action and reward logic outlined above, the final version of the
-`AgentAction()` function looks like:
+`OnActionReceived()` function looks like:
 
 ```csharp
 public float speed = 10;
-public override void AgentAction(float[] vectorAction)
+public override void OnActionReceived(float[] vectorAction)
 {
     // Actions, size = 2
     Vector3 controlSignal = Vector3.zero;
@@ -318,13 +316,13 @@ public override void AgentAction(float[] vectorAction)
     if (distanceToTarget < 1.42f)
     {
         SetReward(1.0f);
-        Done();
+        EndEpisode();
     }
 
     // Fell off platform
     if (this.transform.position.y < 0)
     {
-        Done();
+        EndEpisode();
     }
 
 }
@@ -379,8 +377,8 @@ What this code means is that the heuristic will generate an action corresponding
 to the values of the "Horizontal" and "Vertical" input axis (which correspond to
 the keyboard arrow keys).
 
-In order for the Agent to use the Heuristic, You will need to check the `Use Heuristic`
-checkbox in the `Behavior Parameters` of the RollerAgent.
+In order for the Agent to use the Heuristic, You will need to set the `Behavior Type`
+to `Heuristic Only` in the `Behavior Parameters` of the RollerAgent.
 
 
 Press **Play** to run the scene and use the arrows keys to move the Agent around
@@ -390,11 +388,6 @@ from the platform. Note that for more involved debugging, the ML-Agents SDK
 includes a convenient Monitor class that you can use to easily display Agent
 status information in the Game window.
 
-One additional test you can perform is to first ensure that your environment and
-the Python API work as expected using the `notebooks/getting-started.ipynb`
-[Jupyter notebook](Background-Jupyter.md). Within the notebook, be sure to set
-`env_name` to the name of the environment file you specify when building this
-environment.
 
 ## Training the Environment
 
@@ -425,7 +418,7 @@ in this simple environment, speeds up training.
 To train in the editor, run the following Python command from a Terminal or Console
 window before pressing play:
 
-    mlagents-learn config/config.yaml --run-id=RollerBall-1 --train
+    mlagents-learn config/config.yaml --run-id=RollerBall-1
 
 (where `config.yaml` is a copy of `trainer_config.yaml` that you have edited
 to change the `batch_size` and `buffer_size` hyperparameters for your trainer.)
@@ -486,16 +479,3 @@ to the prefab TrainingArea's location, and not global coordinates.
 
 This is only one way to achieve this objective. Refer to the
 [example environments](Learning-Environment-Examples.md) for other ways we can achieve relative positioning.
-
-## Review: Scene Layout
-
-This section briefly reviews how to organize your scene when using Agents in
-your Unity environment.
-
-There are two kinds of game objects you need to include in your scene in order
-to use Unity ML-Agents: an Academy and one or more Agents.
-
-Keep in mind:
-
-* If you are using multiple training areas, make sure all the Agents have the same `Behavior Name`
-and `Behavior Parameters`
