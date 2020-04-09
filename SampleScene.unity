@@ -162,7 +162,7 @@ GameObject:
   - component: {fileID: 164763448}
   - component: {fileID: 164763449}
   m_Layer: 0
-  m_Name: Camera
+  m_Name: Camera2
   m_TagString: PoliceCamera
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -502,7 +502,9 @@ GameObject:
   - component: {fileID: 618780078}
   - component: {fileID: 618780076}
   - component: {fileID: 618780077}
+  - component: {fileID: 618780081}
   - component: {fileID: 618780080}
+  - component: {fileID: 618780079}
   m_Layer: 0
   m_Name: police
   m_TagString: Police
@@ -635,8 +637,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_BrainParameters:
-    vectorObservationSize: 4
-    numStackedVectorObservations: 4
+    vectorObservationSize: 8
+    numStackedVectorObservations: 8
     vectorActionSize: 04000000
     vectorActionDescriptions: []
     vectorActionSpaceType: 1
@@ -644,7 +646,7 @@ MonoBehaviour:
   m_InferenceDevice: 0
   m_BehaviorType: 0
   m_BehaviorName: PoliceBrain
-  m_TeamID: 0
+  TeamId: 0
   m_UseChildSensors: 1
 --- !u!114 &618780078
 MonoBehaviour:
@@ -659,8 +661,35 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   DecisionPeriod: 10
-  RepeatAction: 1
+  TakeActionsBetweenDecisions: 1
   offsetStep: 0
+--- !u!114 &618780079
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 618780072}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f67c7e722ba14acd9153bb4488bff6e4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_SensorName: RayPer
+  m_DetectableTags:
+  - Target
+  - Police
+  - Obstacle
+  m_RaysPerDirection: 10
+  m_MaxRayDegrees: 136
+  m_SphereCastRadius: 0.3
+  m_RayLength: 90
+  m_RayLayerMask:
+    serializedVersion: 2
+    m_Bits: 4294967291
+  m_ObservationStacks: 1
+  rayHitColor: {r: 1, g: 0, b: 0, a: 1}
+  rayMissColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!114 &618780080
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -670,7 +699,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 618780072}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 88b01f564fb38a34cbcf10f2d33c9515, type: 3}
+  m_Script: {fileID: 11500000, guid: 5de490d381c31234f8dfe0e480f2953e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   agentParameters:
@@ -694,8 +723,26 @@ MonoBehaviour:
   - {fileID: 540971743}
   - {fileID: 1185770583}
   - {fileID: 555423628}
-  seen: 0
   initInd: 0a00000006000000
+  directions: 01000000fcffffffffffffff04000000
+--- !u!114 &618780081
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 618780072}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 282f342c2ab144bf38be65d4d0c4e07d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Camera: {fileID: 1489869500}
+  m_SensorName: CameraSensor
+  m_Width: 84
+  m_Height: 84
+  m_Grayscale: 0
+  m_Compression: 1
 --- !u!1 &682710216
 GameObject:
   m_ObjectHideFlags: 0
@@ -1080,6 +1127,8 @@ GameObject:
   - component: {fileID: 1235489606}
   - component: {fileID: 1235489605}
   - component: {fileID: 1235489604}
+  - component: {fileID: 1235489612}
+  - component: {fileID: 1235489611}
   m_Layer: 0
   m_Name: police 2
   m_TagString: Police
@@ -1144,7 +1193,7 @@ MonoBehaviour:
   m_InferenceDevice: 0
   m_BehaviorType: 0
   m_BehaviorName: PoliceBrain
-  m_TeamID: 0
+  TeamId: 0
   m_UseChildSensors: 1
 --- !u!50 &1235489606
 Rigidbody2D:
@@ -1180,7 +1229,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   DecisionPeriod: 10
-  RepeatAction: 1
+  TakeActionsBetweenDecisions: 1
   offsetStep: 0
 --- !u!61 &1235489608
 BoxCollider2D:
@@ -1273,6 +1322,48 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 21
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: -90}
+--- !u!114 &1235489611
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1235489603}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f67c7e722ba14acd9153bb4488bff6e4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_SensorName: RayPerceptionSensor
+  m_DetectableTags: []
+  m_RaysPerDirection: 3
+  m_MaxRayDegrees: 70
+  m_SphereCastRadius: 0.5
+  m_RayLength: 20
+  m_RayLayerMask:
+    serializedVersion: 2
+    m_Bits: 4294967291
+  m_ObservationStacks: 1
+  rayHitColor: {r: 1, g: 0, b: 0, a: 1}
+  rayMissColor: {r: 1, g: 1, b: 1, a: 1}
+--- !u!114 &1235489612
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1235489603}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 282f342c2ab144bf38be65d4d0c4e07d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Camera: {fileID: 164763449}
+  m_SensorName: CameraSensor2
+  m_Width: 84
+  m_Height: 84
+  m_Grayscale: 0
+  m_Compression: 1
 --- !u!1 &1280390244
 GameObject:
   m_ObjectHideFlags: 0
@@ -1361,7 +1452,7 @@ GameObject:
   - component: {fileID: 1342833044}
   m_Layer: 0
   m_Name: maze1
-  m_TagString: Untagged
+  m_TagString: Obstacle
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1857,7 +1948,7 @@ GameObject:
   - component: {fileID: 1489869498}
   - component: {fileID: 1489869500}
   m_Layer: 0
-  m_Name: Camera
+  m_Name: Camera1
   m_TagString: PoliceCamera
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1884,7 +1975,7 @@ Camera:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1489869497}
-  m_Enabled: 1
+  m_Enabled: 0
   serializedVersion: 2
   m_ClearFlags: 1
   m_BackGroundColor: {r: 0.19215687, g: 0.3019608, b: 0.4745098, a: 0}
@@ -1935,6 +2026,7 @@ GameObject:
   - component: {fileID: 2100717990}
   - component: {fileID: 2100717992}
   - component: {fileID: 2100717991}
+  - component: {fileID: 2100717993}
   m_Layer: 0
   m_Name: redCar
   m_TagString: Target
@@ -2110,7 +2202,26 @@ MonoBehaviour:
   - {fileID: 1185770583}
   - {fileID: 555423628}
   moveSpeed: 10
+  waypointIndex: 5
   trapped: 0
+--- !u!114 &2100717993
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2100717985}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 282f342c2ab144bf38be65d4d0c4e07d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Camera: {fileID: 1489869500}
+  m_SensorName: CameraSensor1
+  m_Width: 84
+  m_Height: 84
+  m_Grayscale: 0
+  m_Compression: 1
 --- !u!1 &2134647480
 GameObject:
   m_ObjectHideFlags: 0

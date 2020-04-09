@@ -11,7 +11,6 @@ public class TestAgent : Agent
     Quaternion initRota;
     float power = 50f;
     Collider2D col;
-    VectorSensor sensor = new VectorSensor(4);
 
     GameObject[] policeteam;
     GameObject target;
@@ -21,14 +20,13 @@ public class TestAgent : Agent
     [SerializeField]
     private int[] initInd;
     public int[] InitInd => initInd;
-    public int[] directions = new int[] { 1, -4, -1, 4 };//up right down left.
+    public int[] directions = new int[] { -1, -4, 1, 4 };//up left down right.
 
     int nextIndex;
     int preIndex;
 
     bool seen;
-    RayPerceptionSensor ray;
-
+    RayPerceptionOutput rayper;
 
     public override void Initialize()
     {
@@ -43,8 +41,7 @@ public class TestAgent : Agent
     }
     public override void CollectObservations(VectorSensor sensor)
     {
-        sensor.AddObservation(transform.position.x);
-        sensor.AddObservation(transform.position.y);
+        sensor.AddObservation(transform.position);
         sensor.AddObservation(rbody.velocity);
     }
     public override void OnEpisodeBegin()
@@ -57,9 +54,10 @@ public class TestAgent : Agent
     public override void OnActionReceived(float[] vectorAction)
     {
         Move();
-        if (Mathf.Approximately(transform.position.x, waypoints[nextIndex].transform.position.x)){
+        if (Mathf.Approximately(transform.position.x, waypoints[nextIndex].transform.position.x) && Mathf.Approximately(transform.position.y, waypoints[nextIndex].transform.position.y))
+        {
             preIndex = nextIndex;
-            nextIndex = preIndex + 1;
+            nextIndex = preIndex + Handling();
         }
     }
     public int Handling()
@@ -76,9 +74,30 @@ public class TestAgent : Agent
     public int randomTurn()
     {
         int ans;
-        ans = Random.Range(0, 3);
-        ans = directions[ans];
-        if(preIndex + ans < 0 || preIndex + ans > 15)
+        RaycastHit2D hitleft = Physics2D.Raycast(transform.position, -Vector2.right, 48.5f);
+        RaycastHit2D hitright = Physics2D.Raycast(transform.position, Vector2.right, 48.5f);
+        RaycastHit2D hitup = Physics2D.Raycast(transform.position, Vector2.up, 48.5f);
+        RaycastHit2D hitdown = Physics2D.Raycast(transform.position, -Vector2.up, 48.5f);
+        List<int> dir = new List<int>(directions);
+        if (hitdown)
+        {
+            dir.Remove(1);
+        }
+        if (hitup)
+        {
+            dir.Remove(-1);
+        }
+        if (hitleft)
+        {
+            dir.Remove(-4);
+        }
+        if (hitright)
+        {
+            dir.Remove(4);
+        }
+        ans = Random.Range(0, dir.Count);
+        ans = dir[ans];
+        if (preIndex + ans < 0 || preIndex + ans > 15)
         {
             ans = randomTurn();
         }
@@ -92,21 +111,21 @@ public class TestAgent : Agent
             if(targetNext >= nextIndex - 4)
             {
                 //direction up
-                ans = 1;
+                ans = -1;
             }
             else if((targetNext - nextIndex) % 4 == 0)
             {
                 //direction left
-                ans = 4;
+                ans = -4;
             }
         }else if(targetNext <= nextIndex + 4)
         {
             //down
-            ans = -1;
+            ans = 1;
         }else if((targetNext - nextIndex) % 4 == 0)
         {
             //right
-            ans = -4;
+            ans = 4;
         }
         else
         {
@@ -132,6 +151,8 @@ public class TestAgent : Agent
         if(action != 0) {
             nextIndex = preIndex + action;
         }
+        string log = preIndex + " " + nextIndex;
+        Debug.Log(log);
         transform.right = transform.position - waypoints[nextIndex].position;
         transform.position = Vector2.MoveTowards(transform.position,
                                             waypoints[nextIndex].transform.position,
@@ -141,10 +162,10 @@ public class TestAgent : Agent
     }
     public override float[] Heuristic()
     {
-        var Action = new float[2];
-        Action[0] = Input.GetAxis("Horizontal");
-        Action[1] = Input.GetAxis("Vertical");
-        return Action;
+        var action = new float[2];
+        action[0] = Input.GetAxis("Horizontal");
+        action[1] = Input.GetAxis("Vertical");
+        return action;
     }
 
 }
