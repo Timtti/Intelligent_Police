@@ -637,8 +637,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_BrainParameters:
-    vectorObservationSize: 8
-    numStackedVectorObservations: 8
+    vectorObservationSize: 5
+    numStackedVectorObservations: 5
     vectorActionSize: 04000000
     vectorActionDescriptions: []
     vectorActionSpaceType: 1
@@ -1183,8 +1183,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_BrainParameters:
-    vectorObservationSize: 4
-    numStackedVectorObservations: 4
+    vectorObservationSize: 5
+    numStackedVectorObservations: 5
     vectorActionSize: 04000000
     vectorActionDescriptions: []
     vectorActionSpaceType: 1
@@ -2201,7 +2201,7 @@ MonoBehaviour:
   - {fileID: 540971743}
   - {fileID: 1185770583}
   - {fileID: 555423628}
-  moveSpeed: 10
+  moveSpeed: 50
   waypointIndex: 5
   trapped: 0
 --- !u!1 &2134647480
