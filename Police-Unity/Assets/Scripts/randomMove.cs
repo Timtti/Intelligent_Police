@@ -16,7 +16,7 @@ public class randomMove : MonoBehaviour
     private int current;
 
     //first waypoint index is five
-    private int waypointIndex = 5;
+    public int waypointIndex = 5;
     private int i = 0;
 
     public bool trapped = false;

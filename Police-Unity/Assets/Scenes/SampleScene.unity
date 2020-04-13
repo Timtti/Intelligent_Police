@@ -519,7 +519,7 @@ BoxCollider2D:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 618780072}
-  m_Enabled: 1
+  m_Enabled: 0
   m_Density: 1
   m_Material: {fileID: 0}
   m_IsTrigger: 0
@@ -662,7 +662,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   DecisionPeriod: 10
   TakeActionsBetweenDecisions: 1
-  offsetStep: 0
 --- !u!114 &618780079
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -699,16 +698,32 @@ MonoBehaviour:
   m_GameObject: {fileID: 618780072}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f9ecf8c98b63a46408bed4fa13b45b46, type: 3}
+  m_Script: {fileID: 11500000, guid: 5de490d381c31234f8dfe0e480f2953e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   agentParameters:
     maxStep: 0
   hasUpgradedFromAgentParameters: 1
-  maxStep: 0
-  waypoints: []
-  seen: 0
-  initInd: 
+  maxStep: 10000
+  waypoints:
+  - {fileID: 95096402}
+  - {fileID: 267834780}
+  - {fileID: 922813359}
+  - {fileID: 533633589}
+  - {fileID: 1204371600}
+  - {fileID: 194235000}
+  - {fileID: 741469307}
+  - {fileID: 206926250}
+  - {fileID: 930451088}
+  - {fileID: 1295111642}
+  - {fileID: 2134647481}
+  - {fileID: 1117674986}
+  - {fileID: 1280390245}
+  - {fileID: 540971743}
+  - {fileID: 1185770583}
+  - {fileID: 555423628}
+  initInd: 0a00000006000000
+  directions: 01000000fcffffffffffffff04000000
 --- !u!114 &618780081
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1129,9 +1144,32 @@ MonoBehaviour:
   m_GameObject: {fileID: 1235489603}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a2873f4ea0bf5d74ab903eb564701cac, type: 3}
+  m_Script: {fileID: 11500000, guid: 88b01f564fb38a34cbcf10f2d33c9515, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  agentParameters:
+    maxStep: 0
+  hasUpgradedFromAgentParameters: 1
+  maxStep: 10000
+  waypoints:
+  - {fileID: 95096402}
+  - {fileID: 267834780}
+  - {fileID: 922813359}
+  - {fileID: 533633589}
+  - {fileID: 1204371600}
+  - {fileID: 194235000}
+  - {fileID: 741469307}
+  - {fileID: 206926250}
+  - {fileID: 930451088}
+  - {fileID: 1295111642}
+  - {fileID: 2134647481}
+  - {fileID: 1117674986}
+  - {fileID: 1280390245}
+  - {fileID: 540971743}
+  - {fileID: 1185770583}
+  - {fileID: 555423628}
+  seen: 0
+  initInd: 0d0000000c000000
 --- !u!114 &1235489605
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1191,7 +1229,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   DecisionPeriod: 10
   TakeActionsBetweenDecisions: 1
-  offsetStep: 0
 --- !u!61 &1235489608
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -1199,7 +1236,7 @@ BoxCollider2D:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1235489603}
-  m_Enabled: 1
+  m_Enabled: 0
   m_Density: 1
   m_Material: {fileID: 0}
   m_IsTrigger: 0
@@ -1296,11 +1333,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_SensorName: RayPerceptionSensor
-  m_DetectableTags: []
-  m_RaysPerDirection: 3
-  m_MaxRayDegrees: 70
-  m_SphereCastRadius: 0.5
-  m_RayLength: 20
+  m_DetectableTags:
+  - Target
+  - Police
+  - Obstacle
+  m_RaysPerDirection: 10
+  m_MaxRayDegrees: 136
+  m_SphereCastRadius: 0.3
+  m_RayLength: 90
   m_RayLayerMask:
     serializedVersion: 2
     m_Bits: 4294967291
@@ -1987,7 +2027,6 @@ GameObject:
   - component: {fileID: 2100717990}
   - component: {fileID: 2100717992}
   - component: {fileID: 2100717991}
-  - component: {fileID: 2100717993}
   m_Layer: 0
   m_Name: redCar
   m_TagString: Target
@@ -2101,7 +2140,7 @@ BoxCollider2D:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2100717985}
-  m_Enabled: 1
+  m_Enabled: 0
   m_Density: 1
   m_Material: {fileID: 0}
   m_IsTrigger: 0
@@ -2163,25 +2202,8 @@ MonoBehaviour:
   - {fileID: 1185770583}
   - {fileID: 555423628}
   moveSpeed: 10
+  waypointIndex: 5
   trapped: 0
---- !u!114 &2100717993
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2100717985}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 282f342c2ab144bf38be65d4d0c4e07d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_Camera: {fileID: 1489869500}
-  m_SensorName: CameraSensor1
-  m_Width: 84
-  m_Height: 84
-  m_Grayscale: 0
-  m_Compression: 1
 --- !u!1 &2134647480
 GameObject:
   m_ObjectHideFlags: 0
