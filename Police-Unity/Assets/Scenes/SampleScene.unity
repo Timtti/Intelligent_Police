@@ -206,8 +206,8 @@ Camera:
     width: 1
     height: 1
   near clip plane: 0.3
-  far clip plane: 25
-  field of view: 121.6273
+  far clip plane: 30
+  field of view: 126.16625
   orthographic: 0
   orthographic size: 22.669985
   m_Depth: -1
@@ -1250,7 +1250,7 @@ MonoBehaviour:
   - {fileID: 540971743}
   - {fileID: 1185770583}
   - {fileID: 555423628}
-  initInd: 0e0000000d000000
+  initInd: 0d0000000e000000
   directions: fffffffffcffffff0100000004000000
   seen: 0
 --- !u!114 &1235489605
@@ -2076,8 +2076,8 @@ Camera:
     width: 1
     height: 1
   near clip plane: 0.3
-  far clip plane: 25
-  field of view: 96.519196
+  far clip plane: 30
+  field of view: 127.65443
   orthographic: 0
   orthographic size: 5
   m_Depth: -1

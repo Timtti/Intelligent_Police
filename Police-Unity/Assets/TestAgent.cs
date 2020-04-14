@@ -48,11 +48,16 @@ public class TestAgent : Agent
     {
         this.transform.position = this.initPos;
         this.transform.rotation = this.initRota;
-        this.target.transform.position = target.GetComponent<randomMove>().initPost;
-        this.target.transform.rotation = target.GetComponent<randomMove>().initRotat;
-        this.target.GetComponent<randomMove>().waypointIndex = 5;
         this.preIndex = InitInd[0];
         this.nextIndex = InitInd[1];
+        //this.policeteam.transform.position = policeteam.GetComponent<TestAgent>().initPos;
+        //this.policeteam.transform.rotation = policeteam.GetComponent<TestAgent>().initPos;
+        //this.policeteam.preIndex = policeteam.GetComponent<TestAgent>().InitInd[0];
+        //this.policeteam.nextIndex = policeteam.GetComponent<TestAgent>().InitInd[1];
+        //this.target.transform.position = target.GetComponent<randomMove>().initPost;
+        //this.target.transform.rotation = target.GetComponent<randomMove>().initRotat;
+        //this.target.GetComponent<randomMove>().waypointIndex = 5;
+
     }
     public override void OnActionReceived(float[] vectorAction)
     {
@@ -73,10 +78,10 @@ public class TestAgent : Agent
     }
     public int Handling()
     {
-        this.seen = target.GetComponent<isSeen>().Rendered;
         int wayp;
         if (seen)
-        { 
+        {
+            Debug.Log("SEEN");
             wayp = ChaseTurn();
             return wayp;
         }
@@ -122,22 +127,26 @@ public class TestAgent : Agent
     {
         int ans=0;
         int targetNext = target.GetComponent<randomMove>().current;
+        RaycastHit2D hitleft = Physics2D.Raycast(transform.position, -Vector2.right, 48.5f);
+        RaycastHit2D hitright = Physics2D.Raycast(transform.position, Vector2.right, 48.5f);
+        RaycastHit2D hitup = Physics2D.Raycast(transform.position, Vector2.up, 48.5f);
+        RaycastHit2D hitdown = Physics2D.Raycast(transform.position, -Vector2.up, 48.5f);
         if (targetNext < nextIndex) {
-            if(targetNext >= nextIndex - 4)
+            if(targetNext >= nextIndex - 4 && !hitup)
             {
                 //direction up
                 ans = -1;
             }
-            else if((targetNext - nextIndex) % 4 == 0)
+            else if((targetNext - nextIndex) % 4 == 0 && !hitleft)
             {
                 //direction left
                 ans = -4;
             }
-        }else if(targetNext <= nextIndex + 4)
+        }else if(targetNext <= nextIndex + 4 && !hitdown)
         {
             //down
             ans = 1;
-        }else if((targetNext - nextIndex) % 4 == 0)
+        }else if((targetNext - nextIndex) % 4 == 0 && !hitright)
         {
             //right
             ans = 4;
@@ -166,13 +175,13 @@ public class TestAgent : Agent
         if(action != 0) {
             nextIndex = preIndex + action;
         }
-        string log = preIndex + " " + nextIndex;
-        //Debug.Log(log);
+
         transform.right = transform.position - waypoints[nextIndex].position;
         transform.position = Vector2.MoveTowards(transform.position,
                                             waypoints[nextIndex].transform.position,
                                             power * Time.deltaTime);
 
+        this.seen = target.GetComponent<isSeen>().Rendered;
 
     }
     public override float[] Heuristic()
