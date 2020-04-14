@@ -13,11 +13,16 @@ public class randomMove : MonoBehaviour
     float moveSpeed = 10f;
 
     private int[] previous = new int[3];
-    private int current;
+    public int current;
 
     //first waypoint index is five
     public int waypointIndex = 5;
     private int i = 0;
+
+    //setup initial values
+    public Vector2 initPost;
+    public Quaternion initRotat;
+
 
     public bool trapped = false;
     Rigidbody2D rb2D;
@@ -25,6 +30,9 @@ public class randomMove : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        this.initPost = this.transform.position;
+        this.initRotat = this.transform.rotation;
+        this.waypointIndex = 5;
         rb2D = GetComponent<Rigidbody2D>();
         current = waypointIndex;
     }

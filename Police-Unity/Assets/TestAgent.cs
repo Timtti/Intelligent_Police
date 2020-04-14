@@ -25,7 +25,7 @@ public class TestAgent : Agent
     int nextIndex;
     int preIndex;
 
-    bool seen;
+    public bool seen;
     RayPerceptionOutput rayper;
 
     public override void Initialize()
@@ -48,27 +48,42 @@ public class TestAgent : Agent
     {
         this.transform.position = this.initPos;
         this.transform.rotation = this.initRota;
+        this.target.transform.position = target.GetComponent<randomMove>().initPost;
+        this.target.transform.rotation = target.GetComponent<randomMove>().initRotat;
+        this.target.GetComponent<randomMove>().waypointIndex = 5;
         this.preIndex = InitInd[0];
         this.nextIndex = InitInd[1];
     }
     public override void OnActionReceived(float[] vectorAction)
     {
-        Move();
-        if (Mathf.Approximately(transform.position.x, waypoints[nextIndex].transform.position.x) && Mathf.Approximately(transform.position.y, waypoints[nextIndex].transform.position.y))
+        if (!target.GetComponent<randomMove>().trapped)
         {
-            preIndex = nextIndex;
-            nextIndex = preIndex + Handling();
+            Move();
+            if (Mathf.Approximately(transform.position.x, waypoints[nextIndex].transform.position.x) && Mathf.Approximately(transform.position.y, waypoints[nextIndex].transform.position.y))
+            {
+                preIndex = nextIndex;
+                nextIndex = preIndex + Handling();
+            }
+        }
+        else
+        {
+            AddReward(200f);
+            EndEpisode();
         }
     }
     public int Handling()
     {
+        this.seen = target.GetComponent<isSeen>().Rendered;
+        int wayp;
         if (seen)
-        {
-            return ChaseTurn();
+        { 
+            wayp = ChaseTurn();
+            return wayp;
         }
         else
         {
-            return randomTurn();
+            wayp = randomTurn();
+            return wayp;
         }
     }
     public int randomTurn()
@@ -106,7 +121,7 @@ public class TestAgent : Agent
     public int ChaseTurn()
     {
         int ans=0;
-        int targetNext = target.GetComponent<randomMove>().waypointIndex;
+        int targetNext = target.GetComponent<randomMove>().current;
         if (targetNext < nextIndex) {
             if(targetNext >= nextIndex - 4)
             {
@@ -152,13 +167,13 @@ public class TestAgent : Agent
             nextIndex = preIndex + action;
         }
         string log = preIndex + " " + nextIndex;
-        Debug.Log(log);
+        //Debug.Log(log);
         transform.right = transform.position - waypoints[nextIndex].position;
         transform.position = Vector2.MoveTowards(transform.position,
                                             waypoints[nextIndex].transform.position,
                                             power * Time.deltaTime);
 
-        this.seen = target.GetComponent<isSeen>().Rendered;
+
     }
     public override float[] Heuristic()
     {
