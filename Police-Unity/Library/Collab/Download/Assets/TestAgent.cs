@@ -78,10 +78,10 @@ public class TestAgent : Agent
     }
     public int Handling()
     {
-        this.seen = target.GetComponent<isSeen>().Rendered;
         int wayp;
         if (seen)
-        { 
+        {
+            Debug.Log("SEEN");
             wayp = ChaseTurn();
             return wayp;
         }
@@ -127,22 +127,26 @@ public class TestAgent : Agent
     {
         int ans=0;
         int targetNext = target.GetComponent<randomMove>().current;
+        RaycastHit2D hitleft = Physics2D.Raycast(transform.position, -Vector2.right, 48.5f);
+        RaycastHit2D hitright = Physics2D.Raycast(transform.position, Vector2.right, 48.5f);
+        RaycastHit2D hitup = Physics2D.Raycast(transform.position, Vector2.up, 48.5f);
+        RaycastHit2D hitdown = Physics2D.Raycast(transform.position, -Vector2.up, 48.5f);
         if (targetNext < nextIndex) {
-            if(targetNext >= nextIndex - 4)
+            if(targetNext >= nextIndex - 4 && !hitup)
             {
                 //direction up
                 ans = -1;
             }
-            else if((targetNext - nextIndex) % 4 == 0)
+            else if((targetNext - nextIndex) % 4 == 0 && !hitleft)
             {
                 //direction left
                 ans = -4;
             }
-        }else if(targetNext <= nextIndex + 4)
+        }else if(targetNext <= nextIndex + 4 && !hitdown)
         {
             //down
             ans = 1;
-        }else if((targetNext - nextIndex) % 4 == 0)
+        }else if((targetNext - nextIndex) % 4 == 0 && !hitright)
         {
             //right
             ans = 4;
@@ -171,13 +175,13 @@ public class TestAgent : Agent
         if(action != 0) {
             nextIndex = preIndex + action;
         }
-        string log = preIndex + " " + nextIndex;
-        //Debug.Log(log);
+
         transform.right = transform.position - waypoints[nextIndex].position;
         transform.position = Vector2.MoveTowards(transform.position,
                                             waypoints[nextIndex].transform.position,
                                             power * Time.deltaTime);
 
+        this.seen = target.GetComponent<isSeen>().Rendered;
 
     }
     public override float[] Heuristic()

@@ -6,6 +6,7 @@ using MLAgents.Sensors;
 
 public class TestAgent : Agent
 {
+    int direct;
     Rigidbody2D rbody;
     Vector2 initPos;
     Quaternion initRota;
@@ -50,14 +51,6 @@ public class TestAgent : Agent
         this.transform.rotation = this.initRota;
         this.preIndex = InitInd[0];
         this.nextIndex = InitInd[1];
-        //this.policeteam.transform.position = policeteam.GetComponent<TestAgent>().initPos;
-        //this.policeteam.transform.rotation = policeteam.GetComponent<TestAgent>().initPos;
-        //this.policeteam.preIndex = policeteam.GetComponent<TestAgent>().InitInd[0];
-        //this.policeteam.nextIndex = policeteam.GetComponent<TestAgent>().InitInd[1];
-        //this.target.transform.position = target.GetComponent<randomMove>().initPost;
-        //this.target.transform.rotation = target.GetComponent<randomMove>().initRotat;
-        //this.target.GetComponent<randomMove>().waypointIndex = 5;
-
     }
     public override void OnActionReceived(float[] vectorAction)
     {
@@ -67,7 +60,15 @@ public class TestAgent : Agent
             if (Mathf.Approximately(transform.position.x, waypoints[nextIndex].transform.position.x) && Mathf.Approximately(transform.position.y, waypoints[nextIndex].transform.position.y))
             {
                 preIndex = nextIndex;
-                nextIndex = preIndex + Handling();
+                if (seen)
+                {
+                    Debug.Log("SEEN");
+                    nextIndex = this.target.GetComponent<randomMove>().waypointIndex;
+                }
+                else
+                {
+                    nextIndex = preIndex + direct;
+                }
             }
         }
         else
@@ -76,21 +77,32 @@ public class TestAgent : Agent
             EndEpisode();
         }
     }
-    public int Handling()
+
+    private void Update()
     {
-        int wayp;
+        
+        if (!seen)
+        {
+            direct = randomTurn();
+        }
+    }
+
+    /*public int Handling()
+    {
         if (seen)
         {
+
             Debug.Log("SEEN");
-            wayp = ChaseTurn();
-            return wayp;
+            direct = ChaseTurn();
+            return direct;
         }
         else
         {
-            wayp = randomTurn();
-            return wayp;
+            direct = randomTurn();
+            return direct;
         }
-    }
+    }*/
+
     public int randomTurn()
     {
         int ans;
@@ -126,7 +138,8 @@ public class TestAgent : Agent
     public int ChaseTurn()
     {
         int ans=0;
-        int targetNext = target.GetComponent<randomMove>().current;
+        int targetCur = target.GetComponent<randomMove>().current;
+        int targetNext = target.GetComponent<randomMove>().waypointIndex;
         RaycastHit2D hitleft = Physics2D.Raycast(transform.position, -Vector2.right, 48.5f);
         RaycastHit2D hitright = Physics2D.Raycast(transform.position, Vector2.right, 48.5f);
         RaycastHit2D hitup = Physics2D.Raycast(transform.position, Vector2.up, 48.5f);

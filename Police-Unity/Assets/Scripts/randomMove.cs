@@ -12,6 +12,7 @@ public class randomMove : MonoBehaviour
     [SerializeField]
     float moveSpeed = 10f;
 
+    GameObject Trapped;
     private int[] previous = new int[3];
     public int current;
 
@@ -34,6 +35,7 @@ public class randomMove : MonoBehaviour
         this.initRotat = this.transform.rotation;
         this.waypointIndex = 5;
         rb2D = GetComponent<Rigidbody2D>();
+        Trapped = GameObject.Find("Trap");
         current = waypointIndex;
     }
 
@@ -57,6 +59,10 @@ public class randomMove : MonoBehaviour
                 current = waypointIndex;
                 i++;
             }
+        }
+        else
+        {
+            Trapped.GetComponent<Canvas>().enabled = true;
         }
     }
 
