@@ -604,6 +604,7 @@ GameObject:
   - component: {fileID: 618780081}
   - component: {fileID: 618780080}
   - component: {fileID: 618780079}
+  - component: {fileID: 618780082}
   m_Layer: 0
   m_Name: police
   m_TagString: Police
@@ -736,9 +737,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_BrainParameters:
-    vectorObservationSize: 5
-    numStackedVectorObservations: 5
-    vectorActionSize: 04000000
+    vectorObservationSize: 6
+    numStackedVectorObservations: 6
+    vectorActionSize: 06000000
     vectorActionDescriptions: []
     vectorActionSpaceType: 1
   m_Model: {fileID: 0}
@@ -841,7 +842,22 @@ MonoBehaviour:
   m_Width: 84
   m_Height: 84
   m_Grayscale: 0
-  m_Compression: 1
+  m_Compression: 0
+--- !u!114 &618780082
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 618780072}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f2902496c0120472b90269f94a0aec7e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  record: 1
+  demonstrationName: PoliceADemo
+  demonstrationDirectory: Assets/Demo
 --- !u!1 &682710216
 GameObject:
   m_ObjectHideFlags: 0
@@ -1305,6 +1321,7 @@ GameObject:
   - component: {fileID: 1235489611}
   - component: {fileID: 1235489607}
   - component: {fileID: 1235489604}
+  - component: {fileID: 1235489613}
   m_Layer: 0
   m_Name: police 2
   m_TagString: Police
@@ -1361,9 +1378,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_BrainParameters:
-    vectorObservationSize: 5
-    numStackedVectorObservations: 5
-    vectorActionSize: 04000000
+    vectorObservationSize: 6
+    numStackedVectorObservations: 6
+    vectorActionSize: 06000000
     vectorActionDescriptions: []
     vectorActionSpaceType: 1
   m_Model: {fileID: 0}
@@ -1542,7 +1559,22 @@ MonoBehaviour:
   m_Width: 84
   m_Height: 84
   m_Grayscale: 0
-  m_Compression: 1
+  m_Compression: 0
+--- !u!114 &1235489613
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1235489603}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f2902496c0120472b90269f94a0aec7e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  record: 1
+  demonstrationName: PoliceBDemo
+  demonstrationDirectory: Assets/Demo
 --- !u!1 &1280390244
 GameObject:
   m_ObjectHideFlags: 0

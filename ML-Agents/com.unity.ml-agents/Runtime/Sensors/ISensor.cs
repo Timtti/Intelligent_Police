@@ -55,12 +55,6 @@ namespace MLAgents.Sensors
         void Update();
 
         /// <summary>
-        /// Resets the internal states of the sensor. This is called at the end of an Agent's episode.
-        /// Most implementations can leave this empty.
-        /// </summary>
-        void Reset();
-
-        /// <summary>
         /// Return the compression type being used. If no compression is used, return
         /// <see cref="SensorCompressionType.None"/>.
         /// </summary>

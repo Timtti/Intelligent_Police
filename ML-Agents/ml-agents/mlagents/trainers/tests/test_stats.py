@@ -2,9 +2,7 @@ from unittest import mock
 import os
 import pytest
 import tempfile
-import unittest
 import csv
-import time
 
 from mlagents.trainers.stats import (
     StatsReporter,
@@ -12,8 +10,6 @@ from mlagents.trainers.stats import (
     CSVWriter,
     StatsSummary,
     GaugeWriter,
-    ConsoleWriter,
-    StatsPropertyType,
 )
 
 
@@ -54,7 +50,7 @@ def test_stat_reporter_add_summary_write():
     )
 
 
-def test_stat_reporter_property():
+def test_stat_reporter_text():
     # Test add_writer
     mock_writer = mock.Mock()
     StatsReporter.writers.clear()
@@ -63,11 +59,10 @@ def test_stat_reporter_property():
 
     statsreporter1 = StatsReporter("category1")
 
-    # Test add_property
-    statsreporter1.add_property("key", "this is a text")
-    mock_writer.add_property.assert_called_once_with(
-        "category1", "key", "this is a text"
-    )
+    # Test write_text
+    step = 10
+    statsreporter1.write_text("this is a text", step)
+    mock_writer.write_text.assert_called_once_with("category1", "this is a text", step)
 
 
 @mock.patch("mlagents.tf_utils.tf.Summary")
@@ -76,7 +71,7 @@ def test_tensorboard_writer(mock_filewriter, mock_summary):
     # Test write_stats
     category = "category1"
     with tempfile.TemporaryDirectory(prefix="unittest-") as base_dir:
-        tb_writer = TensorboardWriter(base_dir, clear_past_data=False)
+        tb_writer = TensorboardWriter(base_dir)
         statssummary1 = StatsSummary(mean=1.0, std=1.0, num=1)
         tb_writer.write_stats("category1", {"key1": statssummary1}, 10)
 
@@ -95,32 +90,6 @@ def test_tensorboard_writer(mock_filewriter, mock_summary):
             mock_summary.return_value, 10
         )
         mock_filewriter.return_value.flush.assert_called_once()
-
-        # Test hyperparameter writing - no good way to parse the TB string though.
-        tb_writer.add_property(
-            "category1", StatsPropertyType.HYPERPARAMETERS, {"example": 1.0}
-        )
-        assert mock_filewriter.return_value.add_summary.call_count > 1
-
-
-def test_tensorboard_writer_clear(tmp_path):
-    tb_writer = TensorboardWriter(tmp_path, clear_past_data=False)
-    statssummary1 = StatsSummary(mean=1.0, std=1.0, num=1)
-    tb_writer.write_stats("category1", {"key1": statssummary1}, 10)
-    # TB has some sort of timeout before making a new file
-    time.sleep(1.0)
-    assert len(os.listdir(os.path.join(tmp_path, "category1"))) > 0
-
-    # See if creating a new one doesn't delete it
-    tb_writer = TensorboardWriter(tmp_path, clear_past_data=False)
-    tb_writer.write_stats("category1", {"key1": statssummary1}, 10)
-    assert len(os.listdir(os.path.join(tmp_path, "category1"))) > 1
-    time.sleep(1.0)
-
-    # See if creating a new one deletes old ones
-    tb_writer = TensorboardWriter(tmp_path, clear_past_data=True)
-    tb_writer.write_stats("category1", {"key1": statssummary1}, 10)
-    assert len(os.listdir(os.path.join(tmp_path, "category1"))) == 1
 
 
 def test_csv_writer():
@@ -169,61 +138,3 @@ def test_gauge_stat_writer_sanitize():
         GaugeWriter.sanitize_string("Very/Very/Very Nested Stat")
         == "Very.Very.VeryNestedStat"
     )
-
-
-class ConsoleWriterTest(unittest.TestCase):
-    def test_console_writer(self):
-        # Test write_stats
-        with self.assertLogs("mlagents.trainers", level="INFO") as cm:
-            category = "category1"
-            console_writer = ConsoleWriter()
-            statssummary1 = StatsSummary(mean=1.0, std=1.0, num=1)
-            console_writer.write_stats(
-                category,
-                {
-                    "Environment/Cumulative Reward": statssummary1,
-                    "Is Training": statssummary1,
-                },
-                10,
-            )
-            statssummary2 = StatsSummary(mean=0.0, std=0.0, num=1)
-            console_writer.write_stats(
-                category,
-                {
-                    "Environment/Cumulative Reward": statssummary1,
-                    "Is Training": statssummary2,
-                },
-                10,
-            )
-            # Test hyperparameter writing - no good way to parse the TB string though.
-            console_writer.add_property(
-                "category1", StatsPropertyType.HYPERPARAMETERS, {"example": 1.0}
-            )
-
-        self.assertIn(
-            "Mean Reward: 1.000. Std of Reward: 1.000. Training.", cm.output[0]
-        )
-        self.assertIn("Not Training.", cm.output[1])
-
-        self.assertIn("Hyperparameters for behavior name", cm.output[2])
-        self.assertIn("example:\t1.0", cm.output[2])
-
-    def test_selfplay_console_writer(self):
-        with self.assertLogs("mlagents.trainers", level="INFO") as cm:
-            category = "category1"
-            console_writer = ConsoleWriter()
-            console_writer.add_property(category, StatsPropertyType.SELF_PLAY, True)
-            statssummary1 = StatsSummary(mean=1.0, std=1.0, num=1)
-            console_writer.write_stats(
-                category,
-                {
-                    "Environment/Cumulative Reward": statssummary1,
-                    "Is Training": statssummary1,
-                    "Self-play/ELO": statssummary1,
-                },
-                10,
-            )
-
-        self.assertIn(
-            "Mean Reward: 1.000. Std of Reward: 1.000. Training.", cm.output[0]
-        )

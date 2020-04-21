@@ -58,7 +58,7 @@ namespace MLAgents
         /// on each side, although we may allow some flexibility in the future.
         /// This should be incremented whenever a change is made to the communication protocol.
         /// </summary>
-        const string k_ApiVersion = "0.16.0";
+        const string k_ApiVersion = "0.15.0";
 
         /// <summary>
         /// Unity package version of com.unity.ml-agents.
@@ -85,6 +85,12 @@ namespace MLAgents
         /// The singleton Academy object.
         /// </summary>
         public static Academy Instance { get { return s_Lazy.Value; } }
+
+        /// <summary>
+        /// Collection of float properties (indexed by a string).
+        /// </summary>
+        public FloatPropertiesChannel FloatProperties;
+
 
         // Fields not provided in the Inspector.
 
@@ -138,14 +144,11 @@ namespace MLAgents
         // This will mark the Agent as Done if it has reached its maxSteps.
         internal event Action AgentIncrementStep;
 
-
-        /// <summary>
-        /// Signals to all of the <see cref="Agent"/>s that their step is about to begin.
-        /// This is a good time for an <see cref="Agent"/> to decide if it would like to
-        /// call <see cref="Agent.RequestDecision"/> or <see cref="Agent.RequestAction"/>
-        /// for this step.  Any other pre-step setup could be done during this even as well.
-        /// </summary>
-        public event Action<int> AgentPreStep;
+        // Signals to all the agents at each environment step along with the
+        // Academy's maxStepReached, done and stepCount values. The agents rely
+        // on this event to update their own values of max step reached and done
+        // in addition to aligning on the step count of the global episode.
+        internal event Action<int> AgentSetStatus;
 
         // Signals to all the agents at each environment step so they can send
         // their state to their Policy if they have requested a decision.
@@ -209,6 +212,27 @@ namespace MLAgents
             // Don't show this object in the hierarchy
             m_StepperObject.hideFlags = HideFlags.HideInHierarchy;
             m_FixedUpdateStepper = m_StepperObject.AddComponent<AcademyFixedUpdateStepper>();
+        }
+
+        /// <summary>
+        /// Registers SideChannel to the Academy to send and receive data with Python.
+        /// If IsCommunicatorOn is false, the SideChannel will not be registered.
+        /// </summary>
+        /// <param name="channel"> The side channel to be registered.</param>
+        public void RegisterSideChannel(SideChannel channel)
+        {
+            LazyInitialize();
+            Communicator?.RegisterSideChannel(channel);
+        }
+
+        /// <summary>
+        /// Unregisters SideChannel to the Academy. If the side channel was not registered,
+        /// nothing will happen.
+        /// </summary>
+        /// <param name="channel"> The side channel to be unregistered.</param>
+        public void UnregisterSideChannel(SideChannel channel)
+        {
+            Communicator?.UnregisterSideChannel(channel);
         }
 
         /// <summary>
@@ -289,14 +313,10 @@ namespace MLAgents
         /// </summary>
         void InitializeEnvironment()
         {
-            TimerStack.Instance.AddMetadata("communication_protocol_version", k_ApiVersion);
-            TimerStack.Instance.AddMetadata("com.unity.ml-agents_version", k_PackageVersion);
-
             EnableAutomaticStepping();
 
-            SideChannelUtils.RegisterSideChannel(new EngineConfigurationChannel());
-            SideChannelUtils.RegisterSideChannel(new FloatPropertiesChannel());
-            SideChannelUtils.RegisterSideChannel(new StatsSideChannel());
+            var floatProperties = new FloatPropertiesChannel();
+            FloatProperties = floatProperties;
 
             // Try to launch the communicator by using the arguments passed at launch
             var port = ReadPortFromArgs();
@@ -312,6 +332,8 @@ namespace MLAgents
 
             if (Communicator != null)
             {
+                Communicator.RegisterSideChannel(new EngineConfigurationChannel());
+                Communicator.RegisterSideChannel(floatProperties);
                 // We try to exchange the first message with Python. If this fails, it means
                 // no Python Process is ready to train the environment. In this case, the
                 //environment must use Inference.
@@ -353,7 +375,7 @@ namespace MLAgents
         {
             DecideAction = () => {};
             DestroyAction = () => {};
-            AgentPreStep = i => {};
+            AgentSetStatus = i => {};
             AgentSendState = () => {};
             AgentAct = () => {};
             AgentForceReset = () => {};
@@ -429,7 +451,7 @@ namespace MLAgents
                 ForcedFullReset();
             }
 
-            AgentPreStep?.Invoke(m_StepCount);
+            AgentSetStatus?.Invoke(m_StepCount);
 
             m_StepCount += 1;
             m_TotalStepCount += 1;
@@ -443,12 +465,6 @@ namespace MLAgents
             using (TimerStack.Instance.Scoped("DecideAction"))
             {
                 DecideAction?.Invoke();
-            }
-
-            // If the communicator is not on, we need to clear the SideChannel sending queue
-            if (!IsCommunicatorOn)
-            {
-                SideChannelUtils.GetSideChannelMessage();
             }
 
             using (TimerStack.Instance.Scoped("AgentAct"))
@@ -502,7 +518,6 @@ namespace MLAgents
 
             Communicator?.Dispose();
             Communicator = null;
-            SideChannelUtils.UnregisterAllSideChannels();
 
             if (m_ModelRunners != null)
             {
@@ -520,6 +535,8 @@ namespace MLAgents
             // TODO - Pass worker ID or some other identifier,
             // so that multiple envs won't overwrite each others stats.
             TimerStack.Instance.SaveJsonTimers();
+
+            FloatProperties = null;
             m_Initialized = false;
 
             // Reset the Lazy instance

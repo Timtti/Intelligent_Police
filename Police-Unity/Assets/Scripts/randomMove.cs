@@ -36,7 +36,18 @@ public class randomMove : MonoBehaviour
         this.waypointIndex = 5;
         rb2D = GetComponent<Rigidbody2D>();
         Trapped = GameObject.Find("Trap");
+        Trapped.GetComponent<Canvas>().enabled = false;
         current = waypointIndex;
+    }
+    private void Reset()
+    {
+        this.transform.position = this.initPost;
+        this.transform.rotation = this.initRotat;
+        this.waypointIndex = 5;
+        current = waypointIndex;
+        Trapped = GameObject.Find("Trap");
+        trapped = false;
+
     }
 
     // Update is called once per frame
@@ -63,11 +74,18 @@ public class randomMove : MonoBehaviour
         else
         {
             Trapped.GetComponent<Canvas>().enabled = true;
+            Reset();
         }
     }
 
-    //Move to waypoint
-    void Move()
+    /*
+    private void OnCollisionEnter2D(Collision2D collision)
+    {
+        Reset();
+    }*/
+
+        //Move to waypoint
+        void Move()
     {
         //rotate
         transform.up = waypoints[waypointIndex].position - transform.position;

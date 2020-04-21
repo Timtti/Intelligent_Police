@@ -1,46 +1,36 @@
-from typing import NamedTuple
-from urllib.parse import urlparse, parse_qs
+from typing import Dict, NamedTuple
 
 
 class BehaviorIdentifiers(NamedTuple):
-    """
-    BehaviorIdentifiers is a named tuple of the identifiers that uniquely distinguish
-    an agent encountered in the trainer_controller. The named tuple consists of the
-    fully qualified behavior name, the name of the brain name (corresponds to trainer
-    in the trainer controller) and the team id.  In the future, this can be extended
-    to support further identifiers.
-    """
-
-    behavior_id: str
+    name_behavior_id: str
     brain_name: str
-    team_id: int
+    behavior_ids: Dict[str, int]
 
     @staticmethod
     def from_name_behavior_id(name_behavior_id: str) -> "BehaviorIdentifiers":
         """
-        Parses a name_behavior_id of the form name?team=0
+        Parses a name_behavior_id of the form name?team=0&param1=i&...
         into a BehaviorIdentifiers NamedTuple.
-        This allows you to access the brain name and team id of an agent
+        This allows you to access the brain name and distinguishing identifiers
+        without parsing more than once.
         :param name_behavior_id: String of behavior params in HTTP format.
         :returns: A BehaviorIdentifiers object.
         """
 
-        parsed = urlparse(name_behavior_id)
-        name = parsed.path
-        ids = parse_qs(parsed.query)
-        team_id: int = 0
-        if "team" in ids:
-            team_id = int(ids["team"][0])
+        ids: Dict[str, int] = {}
+        if "?" in name_behavior_id:
+            name, identifiers = name_behavior_id.rsplit("?", 1)
+            if "&" in identifiers:
+                list_of_identifiers = identifiers.split("&")
+            else:
+                list_of_identifiers = [identifiers]
+
+            for identifier in list_of_identifiers:
+                key, value = identifier.split("=")
+                ids[key] = int(value)
+        else:
+            name = name_behavior_id
+
         return BehaviorIdentifiers(
-            behavior_id=name_behavior_id, brain_name=name, team_id=team_id
+            name_behavior_id=name_behavior_id, brain_name=name, behavior_ids=ids
         )
-
-
-def create_name_behavior_id(name: str, team_id: int) -> str:
-    """
-   Reconstructs fully qualified behavior name from name and team_id
-   :param name: brain name
-   :param team_id: team ID
-   :return: name_behavior_id
-   """
-    return name + "?team=" + str(team_id)

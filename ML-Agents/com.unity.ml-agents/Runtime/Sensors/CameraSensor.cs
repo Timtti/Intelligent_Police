@@ -110,9 +110,6 @@ namespace MLAgents.Sensors
         public void Update() {}
 
         /// <inheritdoc/>
-        public void Reset() { }
-
-        /// <inheritdoc/>
         public SensorCompressionType GetCompressionType()
         {
             return m_CompressionType;

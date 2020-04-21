@@ -1,5 +1,7 @@
 using System.Collections.Generic;
 using System;
+using System.IO;
+using System.Text;
 
 namespace MLAgents.SideChannels
 {

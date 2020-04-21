@@ -45,8 +45,8 @@ namespace MLAgents.Tests
             intSender.SendInt(5);
             intSender.SendInt(6);
 
-            byte[] fakeData = SideChannelUtils.GetSideChannelMessage(dictSender);
-            SideChannelUtils.ProcessSideChannelData(dictReceiver, fakeData);
+            byte[] fakeData = RpcCommunicator.GetSideChannelMessage(dictSender);
+            RpcCommunicator.ProcessSideChannelData(dictReceiver, fakeData);
 
             Assert.AreEqual(intReceiver.messagesReceived[0], 4);
             Assert.AreEqual(intReceiver.messagesReceived[1], 5);
@@ -67,8 +67,8 @@ namespace MLAgents.Tests
             strSender.SendRawBytes(Encoding.ASCII.GetBytes(str1));
             strSender.SendRawBytes(Encoding.ASCII.GetBytes(str2));
 
-            byte[] fakeData = SideChannelUtils.GetSideChannelMessage(dictSender);
-            SideChannelUtils.ProcessSideChannelData(dictReceiver, fakeData);
+            byte[] fakeData = RpcCommunicator.GetSideChannelMessage(dictSender);
+            RpcCommunicator.ProcessSideChannelData(dictReceiver, fakeData);
 
             var messages = strReceiver.GetAndClearReceivedMessages();
 
@@ -96,8 +96,8 @@ namespace MLAgents.Tests
             tmp = propB.GetPropertyWithDefault(k2, 3.0f);
             Assert.AreEqual(tmp, 1.0f);
 
-            byte[] fakeData = SideChannelUtils.GetSideChannelMessage(dictSender);
-            SideChannelUtils.ProcessSideChannelData(dictReceiver, fakeData);
+            byte[] fakeData = RpcCommunicator.GetSideChannelMessage(dictSender);
+            RpcCommunicator.ProcessSideChannelData(dictReceiver, fakeData);
 
             tmp = propA.GetPropertyWithDefault(k2, 3.0f);
             Assert.AreEqual(tmp, 1.0f);
@@ -105,8 +105,8 @@ namespace MLAgents.Tests
             Assert.AreEqual(wasCalled, 0);
             propB.SetProperty(k1, 1.0f);
             Assert.AreEqual(wasCalled, 0);
-            fakeData = SideChannelUtils.GetSideChannelMessage(dictSender);
-            SideChannelUtils.ProcessSideChannelData(dictReceiver, fakeData);
+            fakeData = RpcCommunicator.GetSideChannelMessage(dictSender);
+            RpcCommunicator.ProcessSideChannelData(dictReceiver, fakeData);
             Assert.AreEqual(wasCalled, 1);
 
             var keysA = propA.ListProperties();
@@ -162,32 +162,6 @@ namespace MLAgents.Tests
             Assert.AreEqual(floatVal, incomingMsg.ReadFloat32());
             Assert.AreEqual(stringVal, incomingMsg.ReadString());
             Assert.AreEqual(floatListVal, incomingMsg.ReadFloatList());
-        }
-
-        [Test]
-        public void TestMessageReadDefaults()
-        {
-            // Make sure reading past the end of a message will apply defaults.
-            IncomingMessage incomingMsg;
-            using (var outgoingMsg = new OutgoingMessage())
-            {
-                incomingMsg = new IncomingMessage(outgoingMsg.ToByteArray());
-            }
-
-            Assert.AreEqual(false, incomingMsg.ReadBoolean());
-            Assert.AreEqual(true, incomingMsg.ReadBoolean(defaultValue: true));
-
-            Assert.AreEqual(0, incomingMsg.ReadInt32());
-            Assert.AreEqual(42, incomingMsg.ReadInt32(defaultValue: 42));
-
-            Assert.AreEqual(0.0f, incomingMsg.ReadFloat32());
-            Assert.AreEqual(1337.0f, incomingMsg.ReadFloat32(defaultValue: 1337.0f));
-
-            Assert.AreEqual(default(string), incomingMsg.ReadString());
-            Assert.AreEqual("foo", incomingMsg.ReadString(defaultValue: "foo"));
-
-            Assert.AreEqual(default(float[]), incomingMsg.ReadFloatList());
-            Assert.AreEqual(new float[] { 1001, 1002 }, incomingMsg.ReadFloatList(new float[] { 1001, 1002 }));
         }
     }
 }
