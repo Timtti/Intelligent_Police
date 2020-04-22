@@ -7,18 +7,17 @@ public class randomMove : MonoBehaviour
 {
     //initialise variables 
     [SerializeField]
-    Transform[] waypoints;
+    Transform[] waypoints;//waypoints act like map
 
     [SerializeField]
-    float moveSpeed = 10f;
+    float moveSpeed = 10f;//how fast the car moves
 
-    GameObject Trapped;
-    GameObject testAgent;
-    private int[] previous = new int[3];
-    public int current;
+    GameObject Trapped;//is the car trapped(no where to go) or not
+    private int[] previous = new int[3];//remember previous 3 waypoints where it had been
+    public int current;//where it is now
 
     //first waypoint index is five
-    public int waypointIndex = 5;
+    public int waypointIndex = 5;//the next waypoint
     private int i = 0;
 
     //setup initial values
@@ -39,15 +38,17 @@ public class randomMove : MonoBehaviour
         Trapped = GameObject.Find("Trap");
         Trapped.GetComponent<Canvas>().enabled = false;
         current = waypointIndex;
-        this.testAgent = GameObject.FindGameObjectWithTag("Police");
     }
+    //Reset is called whenever the car needs to be reset to initial position. Say if it is trapped it can reset to initial position and continue training the police.
     private void Reset()
     {
         this.transform.position = this.initPost;
         this.transform.rotation = this.initRotat;
         this.waypointIndex = 5;
         current = waypointIndex;
-        this.testAgent.GetComponent<TestAgent>().EndEpisode();
+        Trapped = GameObject.Find("Trap");
+        trapped = false;
+
     }
 
     // Update is called once per frame
@@ -73,17 +74,17 @@ public class randomMove : MonoBehaviour
         }
         else
         {
+            //if trapped, set the boolean trapped to true and reset.
             Trapped.GetComponent<Canvas>().enabled = true;
-            trapped = false;
             Reset();
         }
     }
 
-    
+    /*
     private void OnCollisionEnter2D(Collision2D collision)
     {
         Reset();
-    }
+    }*/
 
         //Move to waypoint
         void Move()

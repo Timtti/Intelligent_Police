@@ -4,28 +4,22 @@ using UnityEngine;
 
 public class isSeen : MonoBehaviour
 {
-    //　カメラ内にいるかどうか
+    //　is it in camera view or not
     private bool isInsideCamera;
     private const string CAMERA_TAG_NAME = "PoliceCamera";
 
-    //カメラに表示されているか
+    //is it shown on camera or not
     public bool Rendered = false;
 
     private void Update()
     {
-
-        //if (Rendered)
-        //{
-        //    Debug.Log("カメラに映ってるよ！");
-        //}
-
         Rendered = false;
     }
 
-    //カメラに映ってる間に呼ばれる
+    //when show on camera
     private void OnWillRenderObject()
     {
-        //メインカメラに映った時だけ_isRenderedを有効に
+        //only activate isrendered when rendered by camera with tag name
         if (Camera.current.tag == CAMERA_TAG_NAME)
         {
             Rendered = true;

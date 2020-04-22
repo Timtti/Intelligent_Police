@@ -4,6 +4,9 @@ ScriptsOnlyBuild:
     - TestAgent
     - isSeen
     - randomMove
+    Barracuda.dll:
+    - Barracuda.NNModel
+    - Barracuda.NNModelData
     Unity.2D.Tilemap.Editor.dll:
     - UnityEditor.Tilemaps.GridPaintingState
     - UnityEditor.Tilemaps.GridPaletteBrushes
@@ -28,8 +31,6 @@ ScriptsOnlyBuild:
     - UnityEngine.UI.CanvasScaler
     - UnityEngine.UI.GraphicRaycaster
     - UnityEngine.UI.Text
-    com.unity.multiplayer-hlapi.Runtime.dll:
-    - UnityEngine.Networking.NetworkCallbacks
   sceneClasses:
     Assets/Scenes/SampleScene.unity:
     - Class: 1
@@ -57,31 +58,35 @@ ScriptsOnlyBuild:
     - Class: 109
       Script: {instanceID: 0}
     - Class: 114
-      Script: {instanceID: 11246}
+      Script: {instanceID: 11204}
     - Class: 114
-      Script: {instanceID: 11294}
+      Script: {instanceID: 11252}
     - Class: 114
-      Script: {instanceID: 11530}
+      Script: {instanceID: 11480}
     - Class: 114
-      Script: {instanceID: 11686}
+      Script: {instanceID: 11634}
     - Class: 114
-      Script: {instanceID: 11718}
+      Script: {instanceID: 11666}
     - Class: 114
-      Script: {instanceID: 12012}
+      Script: {instanceID: 11956}
     - Class: 114
-      Script: {instanceID: 12220}
+      Script: {instanceID: 12162}
     - Class: 114
-      Script: {instanceID: 12564}
+      Script: {instanceID: 12490}
     - Class: 114
-      Script: {instanceID: 12742}
+      Script: {instanceID: 12662}
     - Class: 114
-      Script: {instanceID: 13472}
+      Script: {instanceID: 12700}
     - Class: 114
-      Script: {instanceID: 13700}
+      Script: {instanceID: 12908}
     - Class: 114
-      Script: {instanceID: 13738}
+      Script: {instanceID: 13370}
     - Class: 114
-      Script: {instanceID: 14348}
+      Script: {instanceID: 13588}
+    - Class: 114
+      Script: {instanceID: 13626}
+    - Class: 114
+      Script: {instanceID: 14220}
     - Class: 115
       Script: {instanceID: 0}
     - Class: 128
