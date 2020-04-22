@@ -13,6 +13,7 @@ public class randomMove : MonoBehaviour
     float moveSpeed = 10f;
 
     GameObject Trapped;
+    GameObject testAgent;
     private int[] previous = new int[3];
     public int current;
 
@@ -38,6 +39,7 @@ public class randomMove : MonoBehaviour
         Trapped = GameObject.Find("Trap");
         Trapped.GetComponent<Canvas>().enabled = false;
         current = waypointIndex;
+        this.testAgent = GameObject.FindGameObjectWithTag("Police");
     }
     private void Reset()
     {
@@ -45,9 +47,7 @@ public class randomMove : MonoBehaviour
         this.transform.rotation = this.initRotat;
         this.waypointIndex = 5;
         current = waypointIndex;
-        Trapped = GameObject.Find("Trap");
-        trapped = false;
-
+        this.testAgent.GetComponent<TestAgent>().EndEpisode();
     }
 
     // Update is called once per frame
@@ -74,15 +74,16 @@ public class randomMove : MonoBehaviour
         else
         {
             Trapped.GetComponent<Canvas>().enabled = true;
+            trapped = false;
             Reset();
         }
     }
 
-    /*
+    
     private void OnCollisionEnter2D(Collision2D collision)
     {
         Reset();
-    }*/
+    }
 
         //Move to waypoint
         void Move()
